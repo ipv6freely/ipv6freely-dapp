@@ -228,7 +228,7 @@ async function loadInfo() {
   } else if (chain === 'polygon') {
     priceType = 'MATIC';
   }
-  const price = web3.utils.fromWei(info.deploymentConfig.publicMintPrice, 'ether');
+  const price = web3.utils.fromWei(info.deploymentConfig.mintPrice, 'ether');
   const pricePerMint = document.getElementById("pricePerMint");
   const maxPerMint = document.getElementById("maxPerMint");
   const totalSupply = document.getElementById("totalSupply");
@@ -274,21 +274,6 @@ async function loadInfo() {
   mintButton.onclick = mint;
 }
 
-// function setTotalPrice() {
-
-//   let price = '100';
-//   let priceType = '';
-//   if(chain === 'rinkeby' || chain === 'ethereum') {
-//     priceType = 'ETH';
-//   } else if (chain === 'polygon') {
-//     priceType = 'MATIC';
-//   }
-//   totalPrice.innerText = `${price} ${priceType}`;
-//   mintButton.disabled = false;
-//   mintInput.disabled = false;
-
-// }
-
 function setTotalPrice() {
   const mintInput = document.getElementById("mintInput");
   const mintInputValue = parseInt(mintInput.value);
@@ -300,12 +285,7 @@ function setTotalPrice() {
     mintInput.disabled = true;
     return;
   }
-
-  // let totalPriceWei = "123456";
-  // let totalPriceWei = BigInt(info.deploymentConfig.publicMintPrice);
-  // let totalPriceWei = BigInt(mintInputValue);
-
-  const totalPriceWei = BigInt(info.deploymentConfig.publicMintPrice) * BigInt(mintInputValue);
+  const totalPriceWei = BigInt(info.deploymentConfig.mintPrice) * BigInt(mintInputValue);
   
   let priceType = '';
   if(chain === 'rinkeby' || chain === 'ethereum') {
@@ -319,116 +299,86 @@ function setTotalPrice() {
   mintInput.disabled = false;
 }
 
-// function setTotalPrice() {
-//   const mintInput = document.getElementById("mintInput");
-//   const mintInputValue = parseInt(mintInput.value);
-//   const totalPrice = document.getElementById("totalPrice");
-//   const mintButton = document.getElementById("mintButton");
-//   if(mintInputValue < 1 || mintInputValue > info.deploymentConfig.tokensPerMint) {
-//     totalPrice.innerText = 'INVALID QUANTITY';
-//     mintButton.disabled = true;
-//     mintInput.disabled = true;
-//     return;
-//   }
+async function mint() {
+  const mintButton = document.getElementById("mintButton");
+  mintButton.disabled = true;
+  const spinner = '<div class="dot-elastic"></div><span>Waiting for transaction...</span>';
+  mintButton.innerHTML = spinner;
 
-//   // let totalPriceWei = "123456";
-//   // let totalPriceWei = BigInt(info.deploymentConfig.publicMintPrice);
-//   let totalPriceWei = BigInt(mintInputValue);
+  const amount = parseInt(document.getElementById("mintInput").value);
+  const value = BigInt(info.deploymentConfig.mintPrice) * BigInt(amount);
+  const publicMintActive = await contract.methods.mintingActive().call();
+  const presaleMintActive = await contract.methods.presaleActive().call();
 
-//   // const totalPriceWei = BigInt(info.deploymentConfig.publicMintPrice) * BigInt(mintInputValue);
-  
-//   let priceType = '';
-//   if(chain === 'rinkeby' || chain === 'ethereum') {
-//     priceType = 'ETH';
-//   } else if (chain === 'polygon') {
-//     priceType = 'MATIC';
-//   }
-//   const price = web3.utils.fromWei(totalPriceWei.toString(), 'ether');
-//   totalPrice.innerText = `${price} ${priceType}`;
-//   mintButton.disabled = false;
-//   mintInput.disabled = false;
-// }
+  if (publicMintActive) {
+    // PUBLIC MINT
+    try {
+      const mintTransaction = await contract.methods
+        .mint(amount)
+        .send({ from: window.address, value: value.toString() });
+      if(mintTransaction) {
+        if(chain === 'rinkeby') {
+          const url = `https://rinkeby.etherscan.io/tx/${mintTransaction.transactionHash}`;
+          const mintedContainer = document.querySelector('.minted-container');
+          const countdownContainer = document.querySelector('.countdown');
+          const mintedTxnBtn = document.getElementById("mintedTxnBtn");
+          mintedTxnBtn.href = url;
+          countdownContainer.classList.add('hidden');
+          mintedContainer.classList.remove('hidden');
+        }
+        console.log("Minted successfully!", `Transaction Hash: ${mintTransaction.transactionHash}`);
+      } else {
+        const mainText = document.getElementById("mainText");
+        mainText.innerText = mint_failed;
+        mintButton.innerText = button_public_mint;
+        mintButton.disabled = false;
 
-// async function mint() {
-//   const mintButton = document.getElementById("mintButton");
-//   mintButton.disabled = true;
-//   const spinner = '<div class="dot-elastic"></div><span>Waiting for transaction...</span>';
-//   mintButton.innerHTML = spinner;
+        console.log("Failed to mint!");
+      }
+    } catch(e) {
+      const mainText = document.getElementById("mainText");
+      mainText.innerText = mint_failed;
+      mintButton.innerText = button_public_mint;
+      mintButton.disabled = false;
 
-//   const amount = parseInt(document.getElementById("mintInput").value);
-//   const value = BigInt(info.deploymentConfig.publicMintPrice) * BigInt(amount);
-//   const publicMintActive = await contract.methods.mintingActive().call();
-//   const presaleMintActive = await contract.methods.presaleActive().call();
+      console.log(e);
+    }
+  } else if (presaleMintActive) {
+    // PRE-SALE MINTING
+    try {
+      const merkleData = await fetch(
+        `/.netlify/functions/merkleProof/?wallet=${window.address}&chain=${chain}&contract=${contractAddress}`
+      );
+      const merkleJson = await merkleData.json();
+      const presaleMintTransaction = await contract.methods
+        .presaleMint(amount, merkleJson)
+        .send({ from: window.address, value: value.toString() });
+      if(presaleMintTransaction) {
+        if(chain === 'rinkeby') {
+          const url = `https://rinkeby.etherscan.io/tx/${presaleMintTransaction.transactionHash}`;
+          const mintedContainer = document.querySelector('.minted-container');
+          const countdownContainer = document.querySelector('.countdown');
+          const mintedTxnBtn = document.getElementById("mintedTxnBtn");
+          mintedTxnBtn.href = url;
+          countdownContainer.classList.add('hidden');
+          mintedContainer.classList.remove('hidden');
+        }
+        console.log("Minted successfully!", `Transaction Hash: ${presaleMintTransaction.transactionHash}`);
+      } else {
+        const mainText = document.getElementById("mainText");
+        mainText.innerText = mint_failed;
+        mintButton.innerText = button_presale_mint_whitelisted;
+        mintButton.disabled = false;
 
-//   if (publicMintActive) {
-//     // PUBLIC MINT
-//     try {
-//       const mintTransaction = await contract.methods
-//         .mint(amount)
-//         .send({ from: window.address, value: value.toString() });
-//       if(mintTransaction) {
-//         if(chain === 'rinkeby') {
-//           const url = `https://rinkeby.etherscan.io/tx/${mintTransaction.transactionHash}`;
-//           const mintedContainer = document.querySelector('.minted-container');
-//           const countdownContainer = document.querySelector('.countdown');
-//           const mintedTxnBtn = document.getElementById("mintedTxnBtn");
-//           mintedTxnBtn.href = url;
-//           countdownContainer.classList.add('hidden');
-//           mintedContainer.classList.remove('hidden');
-//         }
-//         console.log("Minted successfully!", `Transaction Hash: ${mintTransaction.transactionHash}`);
-//       } else {
-//         const mainText = document.getElementById("mainText");
-//         mainText.innerText = mint_failed;
-//         mintButton.innerText = button_public_mint;
-//         mintButton.disabled = false;
+        console.log("Failed to mint!");
+      }
+    } catch(e) {
+      const mainText = document.getElementById("mainText");
+      mainText.innerText = mint_failed;
+      mintButton.innerText = button_presale_mint_whitelisted;
+      mintButton.disabled = false;
 
-//         console.log("Failed to mint!");
-//       }
-//     } catch(e) {
-//       const mainText = document.getElementById("mainText");
-//       mainText.innerText = mint_failed;
-//       mintButton.innerText = button_public_mint;
-//       mintButton.disabled = false;
-
-//       console.log(e);
-//     }
-//   } else if (presaleMintActive) {
-//     // PRE-SALE MINTING
-//     try {
-//       const merkleData = await fetch(
-//         `/.netlify/functions/merkleProof/?wallet=${window.address}&chain=${chain}&contract=${contractAddress}`
-//       );
-//       const merkleJson = await merkleData.json();
-//       const presaleMintTransaction = await contract.methods
-//         .presaleMint(amount, merkleJson)
-//         .send({ from: window.address, value: value.toString() });
-//       if(presaleMintTransaction) {
-//         if(chain === 'rinkeby') {
-//           const url = `https://rinkeby.etherscan.io/tx/${presaleMintTransaction.transactionHash}`;
-//           const mintedContainer = document.querySelector('.minted-container');
-//           const countdownContainer = document.querySelector('.countdown');
-//           const mintedTxnBtn = document.getElementById("mintedTxnBtn");
-//           mintedTxnBtn.href = url;
-//           countdownContainer.classList.add('hidden');
-//           mintedContainer.classList.remove('hidden');
-//         }
-//         console.log("Minted successfully!", `Transaction Hash: ${presaleMintTransaction.transactionHash}`);
-//       } else {
-//         const mainText = document.getElementById("mainText");
-//         mainText.innerText = mint_failed;
-//         mintButton.innerText = button_presale_mint_whitelisted;
-//         mintButton.disabled = false;
-
-//         console.log("Failed to mint!");
-//       }
-//     } catch(e) {
-//       const mainText = document.getElementById("mainText");
-//       mainText.innerText = mint_failed;
-//       mintButton.innerText = button_presale_mint_whitelisted;
-//       mintButton.disabled = false;
-
-//       // console.log(e);
-//     }
-//   }
-// }
+      // console.log(e);
+    }
+  }
+}
