@@ -3,7 +3,7 @@
     <script src="js/web3.min.js"></script>
 
     <script>
-      const abi = [
+      const abi =  [
         {
           "inputs": [
             {
@@ -1545,29 +1545,29 @@
                 {
                   "internalType": "address",
                   "name": "royaltiesAddress",
-                      "type": "address"
-                    }
-                  ],
-                  "internalType": "struct NFTCollection.RuntimeConfig",
-                  "name": "newConfig",
-                  "type": "tuple"
+                  "type": "address"
                 }
               ],
-              "name": "updateConfig",
-              "outputs": [],
-              "stateMutability": "nonpayable",
-              "type": "function",
-              "signature": "0xd761aa48"
-            },
-            {
-              "inputs": [],
-              "name": "withdrawFees",
-              "outputs": [],
-              "stateMutability": "nonpayable",
-              "type": "function",
-              "signature": "0x476343ee"
+              "internalType": "struct NFTCollection.RuntimeConfig",
+              "name": "newConfig",
+              "type": "tuple"
             }
-          ];
+          ],
+          "name": "updateConfig",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "signature": "0xd761aa48"
+        },
+        {
+          "inputs": [],
+          "name": "withdrawFees",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "signature": "0x476343ee"
+        }
+      ];
 
       const address = "0x04e05132c9cd617D07299932bdc24857cBa8f3b7"; //Replace with your own contract address
     </script>
