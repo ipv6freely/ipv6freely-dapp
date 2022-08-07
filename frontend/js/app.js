@@ -228,7 +228,7 @@ async function loadInfo() {
   } else if (chain === 'polygon') {
     priceType = 'MATIC';
   }
-  const price = web3.utils.fromWei(info.deploymentConfig.mintPrice, 'ether');
+  const price = web3.utils.fromWei(info.deploymentConfig.publicMintPrice, 'ether');
   const pricePerMint = document.getElementById("pricePerMint");
   const maxPerMint = document.getElementById("maxPerMint");
   const totalSupply = document.getElementById("totalSupply");
@@ -302,10 +302,10 @@ function setTotalPrice() {
   }
 
   // let totalPriceWei = "123456";
-  // let totalPriceWei = BigInt(info.deploymentConfig.mintPrice);
-  let totalPriceWei = BigInt(mintInputValue);
+  // let totalPriceWei = BigInt(info.deploymentConfig.publicMintPrice);
+  // let totalPriceWei = BigInt(mintInputValue);
 
-  // const totalPriceWei = BigInt(info.deploymentConfig.mintPrice) * BigInt(mintInputValue);
+  const totalPriceWei = BigInt(info.deploymentConfig.publicMintPrice) * BigInt(mintInputValue);
   
   let priceType = '';
   if(chain === 'rinkeby' || chain === 'ethereum') {
@@ -319,6 +319,36 @@ function setTotalPrice() {
   mintInput.disabled = false;
 }
 
+// function setTotalPrice() {
+//   const mintInput = document.getElementById("mintInput");
+//   const mintInputValue = parseInt(mintInput.value);
+//   const totalPrice = document.getElementById("totalPrice");
+//   const mintButton = document.getElementById("mintButton");
+//   if(mintInputValue < 1 || mintInputValue > info.deploymentConfig.tokensPerMint) {
+//     totalPrice.innerText = 'INVALID QUANTITY';
+//     mintButton.disabled = true;
+//     mintInput.disabled = true;
+//     return;
+//   }
+
+//   // let totalPriceWei = "123456";
+//   // let totalPriceWei = BigInt(info.deploymentConfig.publicMintPrice);
+//   let totalPriceWei = BigInt(mintInputValue);
+
+//   // const totalPriceWei = BigInt(info.deploymentConfig.publicMintPrice) * BigInt(mintInputValue);
+  
+//   let priceType = '';
+//   if(chain === 'rinkeby' || chain === 'ethereum') {
+//     priceType = 'ETH';
+//   } else if (chain === 'polygon') {
+//     priceType = 'MATIC';
+//   }
+//   const price = web3.utils.fromWei(totalPriceWei.toString(), 'ether');
+//   totalPrice.innerText = `${price} ${priceType}`;
+//   mintButton.disabled = false;
+//   mintInput.disabled = false;
+// }
+
 // async function mint() {
 //   const mintButton = document.getElementById("mintButton");
 //   mintButton.disabled = true;
@@ -326,7 +356,7 @@ function setTotalPrice() {
 //   mintButton.innerHTML = spinner;
 
 //   const amount = parseInt(document.getElementById("mintInput").value);
-//   const value = BigInt(info.deploymentConfig.mintPrice) * BigInt(amount);
+//   const value = BigInt(info.deploymentConfig.publicMintPrice) * BigInt(amount);
 //   const publicMintActive = await contract.methods.mintingActive().call();
 //   const presaleMintActive = await contract.methods.presaleActive().call();
 
