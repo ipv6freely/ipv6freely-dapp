@@ -1577,7 +1577,8 @@
         window.web3 = new Web3(window.ethereum);
         window.contract = new web3.eth.Contract(abi, address);
         window.info = await window.contract.methods.getInfo().call();
-        document.write(info.deploymentConfig.mintPrice);
+        document.write(info.deploymentConfig.symbol);
+        // document.write(info.deploymentConfig.mintPrice);
       }
       loadInfo();
     </script>
