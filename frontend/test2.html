@@ -1577,7 +1577,8 @@
         window.web3 = new Web3(window.ethereum);
         window.contract = new web3.eth.Contract(abi, address);
         window.info = await window.contract.methods.getInfo().call();
-        document.getElementById("price").innerText = info.deploymentConfig.publicMintPrice + " wei";
+        document.write(info.deploymentConfig.mintPrice);
+        document.getElementById("price").innerText = info.deploymentConfig.mintPrice + " wei";
         document.getElementById("maxAmount").innerText = info.deploymentConfig.tokensPerMint;
       }
       loadInfo();
