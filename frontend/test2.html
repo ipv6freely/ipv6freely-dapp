@@ -1578,15 +1578,8 @@
         window.contract = new web3.eth.Contract(abi, address);
         window.info = await window.contract.methods.getInfo().call();
         document.write(info.deploymentConfig.mintPrice);
-        document.getElementById("price").innerText = info.deploymentConfig.mintPrice + " wei";
-        document.getElementById("maxAmount").innerText = info.deploymentConfig.tokensPerMint;
       }
       loadInfo();
     </script>
   </head>
-
-  <body>
-    <div>Minting price per token: <span id="price"></span></div>
-    <div>Maximum tokens per mint: <span id="maxAmount"></span></div>
-  </body>
 </html>
