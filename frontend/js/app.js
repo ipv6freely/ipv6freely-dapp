@@ -302,7 +302,8 @@ function setTotalPrice() {
   }
 
   // let totalPriceWei = "123456";
-  let totalPriceWei = BigInt(info.deploymentConfig.mintPrice);
+  // let totalPriceWei = BigInt(info.deploymentConfig.mintPrice);
+  let totalPriceWei = BigInt(mintInputValue);
 
   // const totalPriceWei = BigInt(info.deploymentConfig.mintPrice) * BigInt(mintInputValue);
   
